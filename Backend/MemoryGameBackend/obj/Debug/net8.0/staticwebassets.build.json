@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "xSjKDQid2aPK7706rfTGIYKtFpFfzL9PLP5G3qjbx3M=",
+  "Source": "MemoryGameBackend",
+  "BasePath": "_content/MemoryGameBackend",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
