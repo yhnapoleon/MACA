@@ -4,6 +4,7 @@ using MemoryGameBackend.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -76,6 +77,13 @@ if (app.Environment.IsDevelopment())
 
 //app.UseHttpsRedirection();
 
+// Serve static ad images from E:\ads mapped to /ad-images
+app.UseStaticFiles(new StaticFileOptions
+{
+  FileProvider = new PhysicalFileProvider(@"E:\ads"),
+  RequestPath = "/ad-images"
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -99,5 +107,7 @@ using (var scope = app.Services.CreateScope())
 
 app.MapControllers();
 
-app.Run();
+// ǿ�Ƽ������� IP �� 5180 �˿�
+// 0.0.0.0 ��ζ�������������������Ͱ�׿ģ��������
+app.Run("http://0.0.0.0:5180");
 

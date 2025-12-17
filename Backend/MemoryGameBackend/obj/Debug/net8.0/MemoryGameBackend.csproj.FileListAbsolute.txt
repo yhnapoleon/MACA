@@ -1,10 +1,3 @@
-E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.csproj.AssemblyReference.cache
-E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.GeneratedMSBuildEditorConfig.editorconfig
-E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.AssemblyInfoInputs.cache
-E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.AssemblyInfo.cs
-E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.csproj.CoreCompileInputs.cache
-E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.MvcApplicationPartsAssemblyInfo.cs
-E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.MvcApplicationPartsAssemblyInfo.cache
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\appsettings.json
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\MemoryGameBackend.staticwebassets.endpoints.json
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\MemoryGameBackend.exe
@@ -15,6 +8,7 @@ E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\MemoryGameBa
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.InMemory.dll
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
@@ -29,6 +23,14 @@ E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\Swashbuckle.
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.csproj.AssemblyReference.cache
+E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.GeneratedMSBuildEditorConfig.editorconfig
+E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.AssemblyInfoInputs.cache
+E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.AssemblyInfo.cs
+E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.csproj.CoreCompileInputs.cache
+E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.MvcApplicationPartsAssemblyInfo.cs
+E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.MvcApplicationPartsAssemblyInfo.cache
+E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.sourcelink.json
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\scopedcss\bundle\MemoryGameBackend.styles.css
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\staticwebassets.build.json
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\staticwebassets.development.json
@@ -45,4 +47,4 @@ E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\refint\Memor
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.pdb
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\MemoryGameBackend.genruntimeconfig.cache
 E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\ref\MemoryGameBackend.dll
-E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.InMemory.dll
+E:\AndroidWorkspace\MACA\Backend\MemoryGameBackend\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

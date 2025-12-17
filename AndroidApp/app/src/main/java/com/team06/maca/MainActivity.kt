@@ -2,13 +2,30 @@ package com.team06.maca
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.team06.maca.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val intent = Intent(this, LoginActivity::class.java)
-        startActivity(intent)
-        finish()
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding.loginButton.setOnClickListener {
+            val username = binding.usernameEditText.text.toString()
+            val password = binding.passwordEditText.text.toString()
+
+            if (username.isNotEmpty() && password.isNotEmpty()) {
+                val intent = Intent(this, FetchActivity::class.java)
+                intent.putExtra("USER_TYPE", "user") // Example user type
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Please enter username and password", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

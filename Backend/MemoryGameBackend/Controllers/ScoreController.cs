@@ -48,10 +48,14 @@ public class ScoreController : ControllerBase
   {
     var top5 = await _db.Scores
       .AsNoTracking()
-      .Include(s => s.User)
+      // 导航属性在投影时会自动生成 LEFT JOIN，无需 Include
       .OrderBy(s => s.ScoreValue)
       .Take(5)
-      .Select(s => new { user = s.User!.Username, score = s.ScoreValue })
+      .Select(s => new
+      {
+        user = s.User != null ? s.User.Username : "Unknown",
+        score = s.ScoreValue
+      })
       .ToListAsync(ct);
 
     // Android 客户端期望直接返回数组，而不是包在 { leaderboard: [...] } 中

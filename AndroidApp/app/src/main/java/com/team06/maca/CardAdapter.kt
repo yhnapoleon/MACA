@@ -6,6 +6,11 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import com.team06.maca.ui.animation.flipCard
 
 class CardAdapter(
     private val cards: List<Card>,
@@ -28,13 +33,51 @@ class CardAdapter(
         }
 
         if (card.isFaceUp) {
-            Glide.with(holder.itemView.context).load(card.imageUrl).into(holder.imageView)
+            Glide.with(holder.itemView.context)
+                .load(card.imageUrl)
+                .centerCrop()
+                .into(holder.imageView)
         } else {
-            holder.imageView.setImageResource(R.drawable.ic_card_back)
+            // Use the new card back drawable
+            holder.imageView.setImageResource(R.drawable.back)
         }
 
         holder.itemView.setOnClickListener {
             if (!card.isMatched) {
+                // Perform flip animation first for immediate visual feedback
+                if (card.isFaceUp) {
+                    // Flip to back
+                    flipCard(
+                        holder.itemView.context,
+                        holder.imageView,
+                        R.drawable.back,
+                        null,
+                        isFaceUp = false
+                    )
+                } else {
+                    // Flip to front (downloaded image). Fetch as Bitmap then flip.
+                    Glide.with(holder.itemView.context)
+                        .asBitmap()
+                        .load(card.imageUrl)
+                        .centerCrop()
+                        .into(object : CustomTarget<Bitmap>() {
+                            override fun onResourceReady(
+                                resource: Bitmap,
+                                transition: Transition<in Bitmap>?
+                            ) {
+                                flipCard(
+                                    holder.itemView.context,
+                                    holder.imageView,
+                                    null,
+                                    resource,
+                                    isFaceUp = true
+                                )
+                            }
+                            override fun onLoadCleared(placeholder: Drawable?) { }
+                        })
+                }
+
+                // Notify game logic
                 onCardClick(position)
             }
         }

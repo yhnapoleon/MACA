@@ -17,13 +17,5 @@ public class GameController : ControllerBase
 
     return Ok(new { images });
   }
-
-  [HttpGet("ads/next")]
-  public IActionResult GetNextAd()
-  {
-    // Placeholder ad image
-    var adUrl = "https://picsum.photos/seed/ad/728/90";
-    return Ok(new { adUrl });
-  }
 }
 

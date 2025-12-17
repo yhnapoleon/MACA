@@ -36,9 +36,6 @@ android {
     buildFeatures {
         viewBinding = true
     }
-    buildFeatures {
-        viewBinding = true
-    }
 }
 
 dependencies {
@@ -63,11 +60,9 @@ dependencies {
     // Lifecycle components for coroutines scope
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
-    implementation ("androidx.activity:activity-ktx:1.9.0")
+    implementation("androidx.activity:activity-ktx:1.9.0")
 
-    // 协程
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    // UI 组件 (RecyclerView 等)
+    // UI Components
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.cardview:cardview:1.0.0")
 

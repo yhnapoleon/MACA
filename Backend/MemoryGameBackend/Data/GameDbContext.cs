@@ -11,6 +11,7 @@ public class GameDbContext : DbContext
 
   public DbSet<User> Users => Set<User>();
   public DbSet<Score> Scores => Set<Score>();
+  public DbSet<Ad> Ads => Set<Ad>();
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
@@ -53,14 +54,25 @@ public class GameDbContext : DbContext
         .HasColumnName("Score")
         .HasColumnType("int");
 
-      entity.Property(s => s.CreatedAt)
-        .IsRequired()
-        .HasColumnType("datetime(6)");
+      // 现有数据库无 CreatedAt 列，忽略该属性以避免查询/插入失败
+      entity.Ignore(s => s.CreatedAt);
 
       entity.HasOne(s => s.User)
         .WithMany(u => u.Scores)
         .HasForeignKey(s => s.UserId)
         .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    // Ads table mapping
+    modelBuilder.Entity<Ad>(entity =>
+    {
+      entity.ToTable("Ads");
+      entity.HasKey(a => a.Id);
+
+      entity.Property(a => a.ImageFileName)
+        .IsRequired()
+        .HasMaxLength(255)
+        .HasColumnType("varchar(255)");
     });
   }
 }

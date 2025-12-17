@@ -1,6 +1,9 @@
 package com.team06.maca
 
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.MediaPlayer
+import android.media.SoundPool
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -8,12 +11,15 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.team06.maca.databinding.ActivityGameBinding
 import com.team06.maca.repository.RepositoryProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.isActive
 import java.util.Timer
 import java.util.TimerTask
 
@@ -29,12 +35,26 @@ class GameActivity : AppCompatActivity() {
     private var adJob: Job? = null
     private var matches = 0
 
+    // Audio components
+    private var bgmPlayer: MediaPlayer? = null
+    private lateinit var soundPool: SoundPool
+    private var turnoverSoundId: Int = 0
+    private var matchSoundId: Int = 0
+    private var victorySoundId: Int = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityGameBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val imageUrls = intent.getStringArrayListExtra("IMAGE_URLS")!!
+        initializeAudio()
+
+        val imageUrls = intent.getStringArrayListExtra("IMAGE_URLS")
+        if (imageUrls == null || imageUrls.isEmpty()) {
+            startActivity(Intent(this@GameActivity, FetchActivity::class.java))
+            finish()
+            return
+        }
         val userType = intent.getStringExtra("USER_TYPE")
 
         cards = (imageUrls.map { Card(it) } + imageUrls.map { Card(it) }).shuffled().toMutableList()
@@ -53,6 +73,26 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
+    private fun initializeAudio() {
+        // 1. Background Music (BGM)
+        bgmPlayer = MediaPlayer.create(this, R.raw.bgm)
+        bgmPlayer?.isLooping = true
+
+        // 2. Sound Effects (SFX)
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_GAME)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(3)
+            .setAudioAttributes(audioAttributes)
+            .build()
+
+        turnoverSoundId = soundPool.load(this, R.raw.turnover, 1)
+        matchSoundId = soundPool.load(this, R.raw.match, 1)
+        victorySoundId = soundPool.load(this, R.raw.victory, 1)
+    }
+
     private fun startTimer() {
         timer = Timer()
         timer?.scheduleAtFixedRate(object : TimerTask() {
@@ -66,12 +106,26 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun startAdRotation() {
-        adJob = lifecycleScope.launch(Dispatchers.Main) {
-            while (true) {
-                repository.getNextAd().onSuccess {
-                    Glide.with(this@GameActivity).load(it).into(binding.adImageView)
+        adJob = lifecycleScope.launch(Dispatchers.IO) {
+            while (isActive) {
+                try {
+                    val result = repository.getNextAd()
+                    if (result.isSuccess) {
+                        val adUrl = result.getOrNull()
+                        if (!adUrl.isNullOrBlank()) {
+                            withContext(Dispatchers.Main) {
+                                Glide.with(this@GameActivity)
+                                    .load(adUrl)
+                                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                    .skipMemoryCache(true)
+                                    .into(binding.adImageView)
+                            }
+                        }
+                    }
+                } catch (_: Exception) {
+                    // Ignore single failure
                 }
-                delay(30000) // 30-second rotation
+                delay(30000)
             }
         }
     }
@@ -81,6 +135,9 @@ class GameActivity : AppCompatActivity() {
         if (card.isFaceUp || card.isMatched) {
             return
         }
+        
+        // Play turnover sound
+        soundPool.play(turnoverSoundId, 1f, 1f, 0, 0, 1f)
 
         binding.gameGridView.isEnabled = false
 
@@ -104,7 +161,14 @@ class GameActivity : AppCompatActivity() {
             matches++
             binding.matchesTextView.text = "$matches/6 matches"
             binding.gameGridView.isEnabled = true
+            
+            // Play match sound
+            soundPool.play(matchSoundId, 1f, 1f, 0, 0, 1f)
+
             if (matches == 6) {
+                // Play victory sound
+                soundPool.play(victorySoundId, 1f, 1f, 0, 0, 1f)
+
                 timer?.cancel()
                 lifecycleScope.launch {
                     repository.submitScore("User", elapsedTime)
@@ -124,9 +188,23 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        bgmPlayer?.start()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        bgmPlayer?.pause()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         timer?.cancel()
         adJob?.cancel()
+        // Release audio resources
+        bgmPlayer?.stop()
+        bgmPlayer?.release()
+        soundPool.release()
     }
 }
