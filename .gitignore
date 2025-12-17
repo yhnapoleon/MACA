@@ -1,0 +1,32 @@
+# --- OS 通用 ---
+.DS_Store
+Thumbs.db
+
+# --- IDE ---
+.vscode/
+.idea/
+AndroidApp/.idea/
+*.iml
+
+# --- Visual Studio/.NET ---
+.vs/
+**/bin/
+**/obj/
+**/Debug/
+**/Release/
+*.user
+*.suo
+
+# --- Gradle/Android ---
+.gradle/
+AndroidApp/.gradle/
+AndroidApp/build/
+AndroidApp/app/build/
+local.properties
+
+# --- 其他生成物 ---
+*.log
+*.tmp
+*.cache
+
+
