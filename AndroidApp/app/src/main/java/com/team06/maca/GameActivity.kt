@@ -173,6 +173,7 @@ class GameActivity : AppCompatActivity() {
                 lifecycleScope.launch {
                     repository.submitScore("User", elapsedTime)
                     val intent = Intent(this@GameActivity, LeaderboardActivity::class.java)
+                    intent.putExtra("ELAPSED_TIME", elapsedTime)
                     startActivity(intent)
                     finish()
                 }

@@ -19,12 +19,18 @@ class LeaderboardActivity : AppCompatActivity() {
         binding = ActivityLeaderboardBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        adapter = LeaderboardAdapter(emptyList())
+        val elapsedTime = intent.getIntExtra("ELAPSED_TIME", -1)
+
+        if (elapsedTime != -1) {
+            binding.currentScoreTextView.text = "Your Score: $elapsedTime"
+        }
+
+        adapter = LeaderboardAdapter(emptyList(), elapsedTime)
         binding.leaderboardRecyclerView.adapter = adapter
 
         lifecycleScope.launch {
             repository.getTop5().onSuccess {
-                adapter = LeaderboardAdapter(it)
+                adapter = LeaderboardAdapter(it, elapsedTime)
                 binding.leaderboardRecyclerView.adapter = adapter
             }
         }

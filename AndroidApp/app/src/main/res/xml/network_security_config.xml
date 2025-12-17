@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-	<!-- 允许在调试期间信任用户安装的证书（用于连接本机/局域网自签名 HTTPS） -->
-	<base-config cleartextTrafficPermitted="true">
-		<trust-anchors>
-			<certificates src="system" />
-			<certificates src="user" />
-		</trust-anchors>
-	</base-config>
+    <!-- Allow trusting user-installed certificates during debugging (for connecting to localhost/LAN self-signed HTTPS) -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
 
-	<!-- 针对模拟器回环地址的域配置 -->
-	<domain-config cleartextTrafficPermitted="true">
-		<domain includeSubdomains="true">10.0.2.2</domain>
-	</domain-config>
+    <!-- Domain configuration for emulator loopback address -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">10.0.2.2</domain>
+    </domain-config>
 </network-security-config>
-
-
