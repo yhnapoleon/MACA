@@ -1,5 +1,6 @@
 package com.team06.maca
 
+import android.animation.Animator
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
@@ -17,9 +18,9 @@ import com.team06.maca.repository.RepositoryProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.isActive
 import java.util.Timer
 import java.util.TimerTask
 
@@ -34,13 +35,16 @@ class GameActivity : AppCompatActivity() {
     private var elapsedTime = 0
     private var adJob: Job? = null
     private var matches = 0
+    private var isGameFinished = false
 
     // Audio components
     private var bgmPlayer: MediaPlayer? = null
     private lateinit var soundPool: SoundPool
     private var turnoverSoundId: Int = 0
     private var matchSoundId: Int = 0
-    private var victorySoundId: Int = 0
+    private var soundsLoadedCount = 0
+    private val soundsToLoad = 2
+    private var soundsAreReady = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,11 +78,9 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun initializeAudio() {
-        // 1. Background Music (BGM)
         bgmPlayer = MediaPlayer.create(this, R.raw.bgm)
         bgmPlayer?.isLooping = true
 
-        // 2. Sound Effects (SFX)
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_GAME)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -88,9 +90,16 @@ class GameActivity : AppCompatActivity() {
             .setAudioAttributes(audioAttributes)
             .build()
 
+        soundPool.setOnLoadCompleteListener { _, _, status ->
+            if (status == 0) {
+                soundsLoadedCount++
+                if (soundsLoadedCount == soundsToLoad) {
+                    soundsAreReady = true
+                }
+            }
+        }
         turnoverSoundId = soundPool.load(this, R.raw.turnover, 1)
         matchSoundId = soundPool.load(this, R.raw.match, 1)
-        victorySoundId = soundPool.load(this, R.raw.victory, 1)
     }
 
     private fun startTimer() {
@@ -132,18 +141,20 @@ class GameActivity : AppCompatActivity() {
 
     private fun onCardClicked(position: Int) {
         val card = cards[position]
-        if (card.isFaceUp || card.isMatched) {
+        if (card.isFaceUp || card.isMatched || isGameFinished) {
             return
         }
-        
-        // Play turnover sound
-        soundPool.play(turnoverSoundId, 1f, 1f, 0, 0, 1f)
+
+        if (soundsAreReady) {
+            soundPool.play(turnoverSoundId, 1f, 1f, 0, 0, 1f)
+        }
 
         binding.gameGridView.isEnabled = false
 
         if (indexOfSingleSelectedCard == null) {
             indexOfSingleSelectedCard = position
             card.isFaceUp = true
+            adapter.notifyItemChanged(position)
             binding.gameGridView.isEnabled = true
         } else {
             card.isFaceUp = true
@@ -151,7 +162,6 @@ class GameActivity : AppCompatActivity() {
             checkForMatch(indexOfSingleSelectedCard!!, position)
             indexOfSingleSelectedCard = null
         }
-        adapter.notifyItemChanged(position)
     }
 
     private fun checkForMatch(position1: Int, position2: Int) {
@@ -161,21 +171,22 @@ class GameActivity : AppCompatActivity() {
             matches++
             binding.matchesTextView.text = "$matches/6 matches"
             binding.gameGridView.isEnabled = true
-            
-            // Play match sound
-            soundPool.play(matchSoundId, 1f, 1f, 0, 0, 1f)
+
+            if (soundsAreReady) {
+                soundPool.play(matchSoundId, 1f, 1f, 0, 0, 1f)
+            }
 
             if (matches == 6) {
-                // Play victory sound
-                soundPool.play(victorySoundId, 1f, 1f, 0, 0, 1f)
-
+                isGameFinished = true
                 timer?.cancel()
-                lifecycleScope.launch {
-                    repository.submitScore("User", elapsedTime)
-                    val intent = Intent(this@GameActivity, LeaderboardActivity::class.java)
-                    intent.putExtra("ELAPSED_TIME", elapsedTime)
-                    startActivity(intent)
-                    finish()
+
+                bgmPlayer?.pause()
+                showVictoryAnimation()
+                
+                // Create and play a one-time victory sound
+                MediaPlayer.create(this, R.raw.victory).apply {
+                    setOnCompletionListener { it.release() } // Clean up after playing
+                    start()
                 }
             }
         } else {
@@ -189,9 +200,38 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
+    private fun showVictoryAnimation() {
+        binding.victoryOverlay.visibility = View.VISIBLE
+        binding.victoryAnimation.playAnimation()
+
+        binding.victoryAnimation.addAnimatorListener(object : Animator.AnimatorListener {
+            override fun onAnimationStart(animation: Animator) {}
+
+            override fun onAnimationCancel(animation: Animator) {}
+            override fun onAnimationRepeat(animation: Animator) {}
+
+            override fun onAnimationEnd(animation: Animator) {
+                binding.continueButton.visibility = View.VISIBLE
+                binding.continueButton.animate().alpha(1f).setDuration(500).start()
+            }
+        })
+
+        binding.continueButton.setOnClickListener {
+            lifecycleScope.launch {
+                repository.submitScore("User", elapsedTime)
+                val intent = Intent(this@GameActivity, LeaderboardActivity::class.java)
+                intent.putExtra("ELAPSED_TIME", elapsedTime)
+                startActivity(intent)
+                finish()
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
-        bgmPlayer?.start()
+        if (!isGameFinished) {
+            bgmPlayer?.start()
+        }
     }
 
     override fun onPause() {
@@ -203,9 +243,10 @@ class GameActivity : AppCompatActivity() {
         super.onDestroy()
         timer?.cancel()
         adJob?.cancel()
-        // Release audio resources
-        bgmPlayer?.stop()
+
         bgmPlayer?.release()
+        bgmPlayer = null
+        
         soundPool.release()
     }
 }

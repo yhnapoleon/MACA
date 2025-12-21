@@ -65,6 +65,7 @@ dependencies {
     // UI Components
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.cardview:cardview:1.0.0")
+    implementation("com.airbnb.android:lottie:6.1.0")
 
     // Retrofit for networking
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
