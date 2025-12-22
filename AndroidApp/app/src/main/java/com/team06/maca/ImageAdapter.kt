@@ -4,20 +4,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 
 class ImageAdapter(
     private val onImageClick: (Int) -> Unit
-) : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
+) : ListAdapter<String, ImageAdapter.ImageViewHolder>(ImageDiffCallback()) {
 
-    private var imageUrls: List<String> = emptyList()
     private val selectedPositions = mutableSetOf<Int>()
-
-    fun submitList(list: List<String>) {
-        imageUrls = list
-        notifyDataSetChanged()
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ImageViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_image, parent, false)
@@ -25,7 +21,7 @@ class ImageAdapter(
     }
 
     override fun onBindViewHolder(holder: ImageViewHolder, position: Int) {
-        val imageUrl = imageUrls[position]
+        val imageUrl = getItem(position)
         Glide.with(holder.itemView.context).load(imageUrl).into(holder.imageView)
 
         // Add visual feedback for selected items
@@ -52,13 +48,37 @@ class ImageAdapter(
         }
     }
 
-    override fun getItemCount(): Int = imageUrls.size
-
     fun getSelectedImageUrls(): List<String> {
-        return selectedPositions.map { imageUrls[it] }
+        return selectedPositions.map { getItem(it) }
+    }
+
+    private fun clearSelection() {
+        val positionsToClear = selectedPositions.toList()
+        selectedPositions.clear()
+        positionsToClear.forEach { notifyItemChanged(it) }
+    }
+
+    override fun submitList(list: List<String>?) {
+        clearSelection()
+        super.submitList(list)
+    }
+
+    override fun submitList(list: List<String>?, commitCallback: Runnable?) {
+        clearSelection()
+        super.submitList(list, commitCallback)
     }
 
     class ImageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val imageView: ImageView = itemView.findViewById(R.id.imageView)
+    }
+
+    private class ImageDiffCallback : DiffUtil.ItemCallback<String>() {
+        override fun areItemsTheSame(oldItem: String, newItem: String): Boolean {
+            return oldItem == newItem
+        }
+
+        override fun areContentsTheSame(oldItem: String, newItem: String): Boolean {
+            return oldItem == newItem
+        }
     }
 }
