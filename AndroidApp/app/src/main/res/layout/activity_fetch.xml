@@ -6,14 +6,29 @@
     android:layout_height="match_parent"
     tools:context=".FetchActivity">
 
+    <ImageView
+        android:id="@+id/fetchBackground"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/login_bg"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <EditText
         android:id="@+id/urlEditText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="8dp"
-        android:text="https://stocksnap.io"
+        android:background="@drawable/bg_ui_container"
+        android:hint="Enter URL to scrape..."
+        android:padding="12dp"
+        android:textColor="#FFFFFF"
+        android:textColorHint="#CCCCCC"
         app:layout_constraintEnd_toStartOf="@+id/fetchButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -21,19 +36,24 @@
     <Button
         android:id="@+id/fetchButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
+        android:layout_height="0dp"
+        android:background="@drawable/btn_game_style"
         android:text="Fetch"
+        android:textColor="#000000"
+        app:layout_constraintBottom_toBottomOf="@+id/urlEditText"
         app:layout_constraintEnd_toStartOf="@+id/pauseButton"
         app:layout_constraintTop_toTopOf="@+id/urlEditText" />
 
     <Button
         android:id="@+id/pauseButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginEnd="16dp"
+        android:background="@drawable/btn_game_style"
         android:text="Pause"
+        android:textColor="#000000"
         android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/urlEditText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/urlEditText" />
 
@@ -45,6 +65,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
+        android:progressTint="#FFD700"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -55,6 +76,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:shadowColor="#000000"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="2"
+        android:textColor="#FFD700"
+        android:textStyle="bold"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -65,6 +92,9 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
+        android:padding="8dp"
+        android:clipToPadding="false"
+        android:background="@drawable/bg_ui_container"
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
         app:layout_constraintBottom_toTopOf="@+id/playButton"
         app:layout_constraintEnd_toEndOf="parent"
@@ -79,8 +109,11 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
+        android:background="@drawable/btn_game_style"
         android:enabled="false"
-        android:text="Play"
+        android:text="Play Game"
+        android:textColor="#000000"
+        android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

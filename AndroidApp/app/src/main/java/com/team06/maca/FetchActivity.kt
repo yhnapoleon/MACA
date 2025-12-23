@@ -70,8 +70,7 @@ class FetchActivity : AppCompatActivity() {
     }
 
     private suspend fun fetchAndDownloadImages(url: String) {
-        val downloadedImagePaths = mutableListOf<String>()
-        // Initial UI setup
+        // Initial UI setup on Main Thread
         withContext(Dispatchers.Main) {
             binding.playButton.isEnabled = false
             binding.pauseButton.visibility = View.VISIBLE
@@ -83,106 +82,84 @@ class FetchActivity : AppCompatActivity() {
         }
 
         try {
-            val imageUrlsToDownload: List<String>
+            // Move all heavy lifting to the IO dispatcher
+            withContext(Dispatchers.IO) {
+                val downloadedImagePaths = mutableListOf<String>()
 
-            // HYBRID MODE LOGIC
-            if (url.contains("stocksnap", ignoreCase = true) || url.contains("wallpaperflare", ignoreCase = true)) {
-                // --- Mode A: Smart Simulation ---
-                imageUrlsToDownload = withContext(Dispatchers.IO) {
-                    val keyword = when {
-                        url.contains("nature", ignoreCase = true) -> "nature"
-                        url.contains("car", ignoreCase = true) -> "car"
-                        url.contains("food", ignoreCase = true) -> "food"
-                        else -> "random" // Default for the base URLs
-                    }
-                    
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(this@FetchActivity, "Simulation Mode for demo. Keyword: '$keyword'", Toast.LENGTH_SHORT).show()
-                    }
-
-                    // Generate 20 direct image URLs from Picsum
-                    (1..20).map { index ->
-                        "https://picsum.photos/seed/$keyword$index/400/600"
-                    }
-                }
-            } else {
-                // --- Mode B & C: Real Jsoup Crawling (for all other sites) ---
-                imageUrlsToDownload = withContext(Dispatchers.IO) {
-                    if (url.contains("toscrape.com", true) || url.contains("webscraper.io", true)) {
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(this@FetchActivity, "Real Crawling Mode (Sandbox)", Toast.LENGTH_SHORT).show()
+                // HYBRID MODE LOGIC to determine URLs
+                val imageUrlsToDownload: List<String> = 
+                    if (url.contains("stocksnap", ignoreCase = true) || url.contains("wallpaperflare", ignoreCase = true)) {
+                        // --- Mode A: Smart Simulation ---
+                        val keyword = when {
+                            url.contains("nature", ignoreCase = true) -> "nature"
+                            url.contains("car", ignoreCase = true) -> "car"
+                            url.contains("food", ignoreCase = true) -> "food"
+                            else -> "random"
                         }
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@FetchActivity, "Simulation Mode for demo. Keyword: '$keyword'", Toast.LENGTH_SHORT).show()
+                        }
+                        (1..20).map { index -> "https://picsum.photos/seed/$keyword$index/400/600" }
                     } else {
+                        // --- Mode B & C: Real Jsoup Crawling ---
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(this@FetchActivity, "Real Crawling Mode (Generic)", Toast.LENGTH_SHORT).show()
+                           val mode = if (url.contains("toscrape.com", true) || url.contains("webscraper.io", true)) "Sandbox" else "Generic"
+                           Toast.makeText(this@FetchActivity, "Real Crawling Mode ($mode)", Toast.LENGTH_SHORT).show()
                         }
-                    }
+                        
+                        val doc = Jsoup.connect(url)
+                            .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                            .timeout(10000)
+                            .maxBodySize(0)
+                            .get()
+                        
+                        val images = doc.select("img")
+                        Log.d("FetchActivity", "Found ${images.size} <img> tags initially.")
 
-                    // Use the best Jsoup logic we have
-                    val doc = Jsoup.connect(url)
-                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-                        .timeout(10000)
-                        .maxBodySize(0)
-                        .get()
-                    
-                    val images = doc.select("img")
-                    Log.d("FetchActivity", "Found ${images.size} <img> tags initially.")
-
-                    images.map { img ->
-                        var src = img.attr("data-src")
-                        if (src.isEmpty()) {
-                            src = img.attr("abs:src")
-                        }
-                        src
-                    }.filter { link ->
-                        val isValid = link.isNotEmpty() &&
+                        images.map { img ->
+                            var src = img.attr("data-src")
+                            if (src.isEmpty()) src = img.attr("abs:src")
+                            src
+                        }.filter { link ->
+                            link.isNotEmpty() &&
                             (link.endsWith(".jpg", ignoreCase = true) || link.endsWith(".jpeg", ignoreCase = true)) &&
                             !link.contains("logo", ignoreCase = true) &&
                             !link.contains("icon", ignoreCase = true) &&
                             !link.contains("user", ignoreCase = true) &&
                             !link.contains("avatar", ignoreCase = true) &&
                             link.length > 25
-                        isValid
-                    }.distinct().take(20)
+                        }.distinct().take(20)
+                    }
+
+                val totalToDownload = imageUrlsToDownload.size
+                withContext(Dispatchers.Main) {
+                    binding.progressText.text = "Found $totalToDownload images. Starting download..."
+                    if (totalToDownload == 0) {
+                        Toast.makeText(this@FetchActivity, "No valid images found at this URL.", Toast.LENGTH_LONG).show()
+                    }
                 }
-            }
 
-            val totalToDownload = imageUrlsToDownload.size
-            withContext(Dispatchers.Main) {
-                binding.progressText.text = "Downloading 0 of $totalToDownload..."
-                if (totalToDownload < 20 && !(url.contains("stocksnap", true) || url.contains("wallpaperflare", true))) {
-                     Toast.makeText(this@FetchActivity, "Found only $totalToDownload images after filtering.", Toast.LENGTH_LONG).show()
-                } else if (totalToDownload > 0) {
-                     Toast.makeText(this@FetchActivity, "Starting download of $totalToDownload images.", Toast.LENGTH_SHORT).show()
-                } else {
-                     Toast.makeText(this@FetchActivity, "No valid images found at this URL.", Toast.LENGTH_LONG).show()
-                }
-            }
+                // --- Download Loop (already on IO thread) ---
+                for ((index, imageUrl) in imageUrlsToDownload.withIndex()) {
+                    ensureActive() // This is now safe
 
-            if (totalToDownload > 0) {
-                withContext(Dispatchers.IO) {
-                    for ((index, imageUrl) in imageUrlsToDownload.withIndex()) {
-                        ensureActive()
+                    while (isPaused) {
+                        delay(100)
+                    }
 
-                        while (isPaused) {
-                            delay(100)
-                        }
-
-                        val file = downloadImage(imageUrl, index)
-                        if (file != null) {
-                            downloadedImagePaths.add(file.absolutePath)
-                        }
-                        
-                        withContext(Dispatchers.Main) {
-                            binding.progressBar.progress = ((index + 1) * 100) / totalToDownload
-                            binding.progressText.text = "Downloading ${index + 1} of $totalToDownload..."
-                            // Update adapter with the current list of downloaded images
-                            imageAdapter.submitList(downloadedImagePaths.toList())
-                        }
+                    val file = downloadImage(imageUrl, index)
+                    if (file != null) {
+                        downloadedImagePaths.add(file.absolutePath)
+                    }
+                    
+                    // Post progress and intermediate results to the Main thread
+                    withContext(Dispatchers.Main) {
+                        binding.progressBar.progress = ((index + 1) * 100) / totalToDownload
+                        binding.progressText.text = "Downloading ${index + 1} of $totalToDownload..."
+                        imageAdapter.submitList(downloadedImagePaths.toList()) // Progressive update
                     }
                 }
             }
-            
         } catch (t: Throwable) {
             if (t !is CancellationException) {
                 t.printStackTrace()
@@ -208,6 +185,7 @@ class FetchActivity : AppCompatActivity() {
     }
 
     private fun downloadImage(imageUrl: String, index: Int): File? {
+        // This function is called from the IO dispatcher, so blocking calls are safe.
         return try {
             val url = URL(imageUrl)
             val connection = url.openConnection() as HttpURLConnection
