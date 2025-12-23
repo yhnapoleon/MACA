@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MemoryGameBackend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+51bf53a1217e1902837769afa4126e825c778573")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+82ea295035578082d27ae6994794c76e2b18d54c")]
 [assembly: System.Reflection.AssemblyProductAttribute("MemoryGameBackend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MemoryGameBackend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
