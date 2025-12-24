@@ -63,7 +63,7 @@ class FetchActivity : AppCompatActivity() {
 
         binding.playButton.setOnClickListener {
             val intent = Intent(this, GameActivity::class.java)
-            intent.putStringArrayListExtra("IMAGE_URLS", ArrayList(imageAdapter.getSelectedImageUrls()))
+            intent.putStringArrayListExtra("IMAGE_PATHS", ArrayList(imageAdapter.getSelectedImagePaths()))
             intent.putExtra("USER_TYPE", getIntent().getStringExtra("USER_TYPE"))
             startActivity(intent)
         }

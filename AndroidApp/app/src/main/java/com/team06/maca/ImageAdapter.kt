@@ -48,7 +48,7 @@ class ImageAdapter(
         }
     }
 
-    fun getSelectedImageUrls(): List<String> {
+    fun getSelectedImagePaths(): List<String> {
         return selectedPositions.map { getItem(it) }
     }
 

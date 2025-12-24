@@ -5,14 +5,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 
 class LeaderboardAdapter(
     private val scores: List<Pair<String, Int>>,
-    private val currentScore: Int = -1
+    private val currentScore: Int = -1,
+    private val currentUsername: String = ""
 ) : RecyclerView.Adapter<LeaderboardAdapter.LeaderboardViewHolder>() {
-
-    private var highlighted = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LeaderboardViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_leaderboard, parent, false)
@@ -20,16 +20,26 @@ class LeaderboardAdapter(
     }
 
     override fun onBindViewHolder(holder: LeaderboardViewHolder, position: Int) {
-        val score = scores[position]
-        holder.rankTextView.text = "${position + 1}"
-        holder.playerTextView.text = score.first
-        holder.scoreTextView.text = score.second.toString()
+        val scoreData = scores[position]
+        holder.rankTextView.text = "#${position + 1}"
+        holder.playerTextView.text = scoreData.first
+        holder.scoreTextView.text = "${scoreData.second}s"
 
-        if (score.second == currentScore && !highlighted) {
-            holder.itemView.setBackgroundColor(Color.YELLOW)
-            highlighted = true
+        // Precise Highlight: Check for both username and score match.
+        if (scoreData.first == currentUsername && scoreData.second == currentScore) {
+            // --- High-Contrast Highlight Style ---
+            holder.itemView.setBackgroundColor(Color.parseColor("#FFD700")) // Solid Gold
+
+            holder.rankTextView.setTextColor(Color.BLACK)
+            holder.playerTextView.setTextColor(Color.BLACK)
+            holder.scoreTextView.setTextColor(Color.BLACK)
         } else {
-            holder.itemView.setBackgroundColor(Color.TRANSPARENT)
+            // --- Default Style ---
+            holder.itemView.background = ContextCompat.getDrawable(holder.itemView.context, R.drawable.bg_ui_container)
+
+            holder.rankTextView.setTextColor(Color.parseColor("#FFD700")) // Gold text
+            holder.playerTextView.setTextColor(Color.WHITE)
+            holder.scoreTextView.setTextColor(Color.WHITE)
         }
     }
 

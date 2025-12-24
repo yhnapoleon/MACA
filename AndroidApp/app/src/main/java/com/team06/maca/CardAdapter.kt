@@ -1,15 +1,16 @@
 package com.team06.maca
 
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import com.team06.maca.ui.animation.flipCard
 
 class CardAdapter(
@@ -34,7 +35,9 @@ class CardAdapter(
 
         if (card.isFaceUp) {
             Glide.with(holder.itemView.context)
-                .load(card.imageUrl)
+                .load(card.imagePath)
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .skipMemoryCache(true)
                 .centerCrop()
                 .into(holder.imageView)
         } else {
@@ -58,7 +61,9 @@ class CardAdapter(
                     // Flip to front (downloaded image). Fetch as Bitmap then flip.
                     Glide.with(holder.itemView.context)
                         .asBitmap()
-                        .load(card.imageUrl)
+                        .load(card.imagePath)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .skipMemoryCache(true)
                         .centerCrop()
                         .into(object : CustomTarget<Bitmap>() {
                             override fun onResourceReady(
@@ -90,4 +95,4 @@ class CardAdapter(
     }
 }
 
-data class Card(val imageUrl: String, var isFaceUp: Boolean = false, var isMatched: Boolean = false)
+data class Card(val imagePath: String, var isFaceUp: Boolean = false, var isMatched: Boolean = false)

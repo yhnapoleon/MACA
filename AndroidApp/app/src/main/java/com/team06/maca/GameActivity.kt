@@ -45,6 +45,7 @@ class GameActivity : AppCompatActivity() {
     private var soundsLoadedCount = 0
     private val soundsToLoad = 2
     private var soundsAreReady = false
+    private lateinit var userType: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,15 +54,15 @@ class GameActivity : AppCompatActivity() {
 
         initializeAudio()
 
-        val imageUrls = intent.getStringArrayListExtra("IMAGE_URLS")
-        if (imageUrls == null || imageUrls.isEmpty()) {
+        val imagePaths = intent.getStringArrayListExtra("IMAGE_PATHS")
+        if (imagePaths == null || imagePaths.isEmpty()) {
             startActivity(Intent(this@GameActivity, FetchActivity::class.java))
             finish()
             return
         }
-        val userType = intent.getStringExtra("USER_TYPE")
+        userType = intent.getStringExtra("USER_TYPE") ?: "Guest"
 
-        cards = (imageUrls.map { Card(it) } + imageUrls.map { Card(it) }).shuffled().toMutableList()
+        cards = (imagePaths.map { Card(it) } + imagePaths.map { Card(it) }).shuffled().toMutableList()
 
         adapter = CardAdapter(cards) { position ->
             onCardClicked(position)
@@ -165,7 +166,7 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun checkForMatch(position1: Int, position2: Int) {
-        if (cards[position1].imageUrl == cards[position2].imageUrl) {
+        if (cards[position1].imagePath == cards[position2].imagePath) {
             cards[position1].isMatched = true
             cards[position2].isMatched = true
             matches++
@@ -218,9 +219,10 @@ class GameActivity : AppCompatActivity() {
 
         binding.continueButton.setOnClickListener {
             lifecycleScope.launch {
-                repository.submitScore("User", elapsedTime)
+                repository.submitScore(userType, elapsedTime)
                 val intent = Intent(this@GameActivity, LeaderboardActivity::class.java)
                 intent.putExtra("ELAPSED_TIME", elapsedTime)
+                intent.putExtra("USER_NAME", userType)
                 startActivity(intent)
                 finish()
             }
