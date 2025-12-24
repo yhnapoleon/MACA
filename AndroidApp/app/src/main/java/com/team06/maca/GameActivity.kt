@@ -3,6 +3,7 @@ package com.team06.maca
 import android.animation.Animator
 import android.content.Intent
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.SoundPool
 import android.os.Bundle
@@ -38,6 +39,40 @@ class GameActivity : AppCompatActivity() {
     private var isGameFinished = false
 
     // Audio components
+    private lateinit var audioManager: AudioManager
+    private var hasAudioFocus: Boolean = false
+    private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { change ->
+        when (change) {
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                hasAudioFocus = true
+                if (!isGameFinished) {
+                    bgmPlayer?.start()
+                }
+                // 恢复音效播放能力
+                if (soundsAreReady) {
+                    try {
+                        soundPool.autoResume()
+                    } catch (_: Exception) { }
+                }
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT,
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                // 临时失去焦点：暂停 BGM，暂停音效
+                bgmPlayer?.pause()
+                try {
+                    soundPool.autoPause()
+                } catch (_: Exception) { }
+            }
+            AudioManager.AUDIOFOCUS_LOSS -> {
+                // 永久失去焦点：停止 BGM，暂停音效
+                hasAudioFocus = false
+                bgmPlayer?.pause()
+                try {
+                    soundPool.autoPause()
+                } catch (_: Exception) { }
+            }
+        }
+    }
     private var bgmPlayer: MediaPlayer? = null
     private lateinit var soundPool: SoundPool
     private var turnoverSoundId: Int = 0
@@ -45,6 +80,7 @@ class GameActivity : AppCompatActivity() {
     private var soundsLoadedCount = 0
     private val soundsToLoad = 2
     private var soundsAreReady = false
+    private lateinit var userName: String
     private lateinit var userType: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,6 +88,7 @@ class GameActivity : AppCompatActivity() {
         binding = ActivityGameBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         initializeAudio()
 
         val imagePaths = intent.getStringArrayListExtra("IMAGE_PATHS")
@@ -60,7 +97,8 @@ class GameActivity : AppCompatActivity() {
             finish()
             return
         }
-        userType = intent.getStringExtra("USER_TYPE") ?: "Guest"
+        userName = intent.getStringExtra("USER_NAME") ?: ""
+        userType = intent.getStringExtra("USER_TYPE") ?: ""
 
         cards = (imagePaths.map { Card(it) } + imagePaths.map { Card(it) }).shuffled().toMutableList()
 
@@ -76,11 +114,18 @@ class GameActivity : AppCompatActivity() {
             binding.adImageView.visibility = View.VISIBLE
             startAdRotation()
         }
+
     }
 
     private fun initializeAudio() {
         bgmPlayer = MediaPlayer.create(this, R.raw.bgm)
         bgmPlayer?.isLooping = true
+        bgmPlayer?.setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_GAME)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build()
+        )
 
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_GAME)
@@ -107,10 +152,10 @@ class GameActivity : AppCompatActivity() {
         timer = Timer()
         timer?.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
-                elapsedTime++
-                runOnUiThread {
-                    binding.timerTextView.text = "Time: $elapsedTime"
-                }
+				elapsedTime++
+				runOnUiThread {
+					binding.timerTextView.text = "Time: $elapsedTime"
+				}
             }
         }, 1000, 1000)
     }
@@ -219,26 +264,54 @@ class GameActivity : AppCompatActivity() {
 
         binding.continueButton.setOnClickListener {
             lifecycleScope.launch {
-                repository.submitScore(userType, elapsedTime)
+                repository.submitScore(userName, elapsedTime)
                 val intent = Intent(this@GameActivity, LeaderboardActivity::class.java)
                 intent.putExtra("ELAPSED_TIME", elapsedTime)
-                intent.putExtra("USER_NAME", userType)
+                intent.putExtra("USER_NAME", userName)
+                intent.putExtra("USER_TYPE", userType)
                 startActivity(intent)
                 finish()
             }
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        // 请求音频焦点，防止被系统或其他音源打断后不恢复
+        hasAudioFocus = audioManager.requestAudioFocus(
+            audioFocusChangeListener,
+            AudioManager.STREAM_MUSIC,
+            AudioManager.AUDIOFOCUS_GAIN
+        ) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+    }
+
     override fun onResume() {
         super.onResume()
-        if (!isGameFinished) {
+        if (!isGameFinished && hasAudioFocus) {
             bgmPlayer?.start()
+        }
+        if (soundsAreReady) {
+            try {
+                soundPool.autoResume()
+            } catch (_: Exception) { }
         }
     }
 
     override fun onPause() {
         super.onPause()
         bgmPlayer?.pause()
+        try {
+            soundPool.autoPause()
+        } catch (_: Exception) { }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // 释放焦点，避免后台占用；下次进入时重新获取
+        try {
+            audioManager.abandonAudioFocus(audioFocusChangeListener)
+        } catch (_: Exception) { }
+        hasAudioFocus = false
     }
 
     override fun onDestroy() {
@@ -249,6 +322,8 @@ class GameActivity : AppCompatActivity() {
         bgmPlayer?.release()
         bgmPlayer = null
         
-        soundPool.release()
+        try {
+            soundPool.release()
+        } catch (_: Exception) { }
     }
 }

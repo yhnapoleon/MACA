@@ -21,8 +21,11 @@ class LeaderboardActivity : AppCompatActivity() {
 
         val elapsedTime = intent.getIntExtra("ELAPSED_TIME", -1)
         val currentUsername = intent.getStringExtra("USER_NAME") ?: ""
+        val currentUserType = intent.getStringExtra("USER_TYPE") ?: ""
 
-        if (elapsedTime != -1) {
+        val hasValidCurrent = elapsedTime != -1 && currentUsername.isNotBlank()
+
+        if (hasValidCurrent) {
             binding.currentScoreTextView.text = "Your Score: $elapsedTime"
         }
 
@@ -31,14 +34,23 @@ class LeaderboardActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repository.getTop5().onSuccess {
-                val topScores = it.toMutableList()
-                // Smart Substitution: If a score matches but the user doesn't, replace it.
-                val scoreIndex = topScores.indexOfFirst { score -> score.second == elapsedTime }
-                if (scoreIndex != -1 && topScores[scoreIndex].first != currentUsername) {
-                    topScores[scoreIndex] = Pair(currentUsername, elapsedTime)
+                val topScores = it.toMutableList() // List<Pair<String, Int>>
+
+                if (hasValidCurrent) {
+                    // 移除与本次成绩相同、但用户名为空或占位(Unknown)的项，避免重复
+                    topScores.removeAll { score ->
+                        score.second == elapsedTime && (score.first.isBlank() || score.first.equals("Unknown", true))
+                    }
+
+                    // 如果列表中没有“用户名+成绩”完全一致的记录，则补充一条，保证当前玩家可见
+                    if (topScores.none { score -> score.first == currentUsername && score.second == elapsedTime }) {
+                        topScores.add(Pair(currentUsername, elapsedTime))
+                    }
                 }
-                adapter = LeaderboardAdapter(topScores, elapsedTime, currentUsername)
-                binding.leaderboardRecyclerView.adapter = adapter
+
+                // Sort by score and take top 5, then update the adapter.
+                val finalScores = topScores.sortedBy { it.second }.take(5)
+                adapter.updateScores(finalScores)
             }
         }
 
@@ -52,6 +64,8 @@ class LeaderboardActivity : AppCompatActivity() {
         binding.backButton.setOnClickListener {
             val intent = Intent(this, FetchActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            intent.putExtra("USER_NAME", currentUsername)
+            intent.putExtra("USER_TYPE", currentUserType)
             startActivity(intent)
         }
     }

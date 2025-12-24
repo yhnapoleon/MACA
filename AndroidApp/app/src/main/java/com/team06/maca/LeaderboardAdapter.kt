@@ -9,7 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 
 class LeaderboardAdapter(
-    private val scores: List<Pair<String, Int>>,
+    private var scores: List<Pair<String, Int>>,
     private val currentScore: Int = -1,
     private val currentUsername: String = ""
 ) : RecyclerView.Adapter<LeaderboardAdapter.LeaderboardViewHolder>() {
@@ -44,6 +44,11 @@ class LeaderboardAdapter(
     }
 
     override fun getItemCount(): Int = scores.size
+
+    fun updateScores(newScores: List<Pair<String, Int>>) {
+        scores = newScores
+        notifyDataSetChanged()
+    }
 
     class LeaderboardViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val rankTextView: TextView = itemView.findViewById(R.id.rankTextView)

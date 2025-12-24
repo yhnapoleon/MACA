@@ -21,7 +21,16 @@ class MainActivity : AppCompatActivity() {
 
             if (username.isNotEmpty() && password.isNotEmpty()) {
                 val intent = Intent(this, FetchActivity::class.java)
-                intent.putExtra("USER_TYPE", "user") // Example user type
+                intent.putExtra("USER_NAME", username) // Pass the actual username
+                
+                // Determine user type based on credentials (example logic)
+                val userType = if (username.equals("free", ignoreCase = true) && password == "free") {
+                    "Free User"
+                } else {
+                    "Premium User"
+                }
+                intent.putExtra("USER_TYPE", userType)
+                
                 startActivity(intent)
             } else {
                 Toast.makeText(this, "Please enter username and password", Toast.LENGTH_SHORT).show()

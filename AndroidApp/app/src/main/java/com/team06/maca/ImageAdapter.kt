@@ -8,10 +8,11 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 
 class ImageAdapter(
     private val onImageClick: (Int) -> Unit
-) : ListAdapter<String, ImageAdapter.ImageViewHolder>(ImageDiffCallback()) {
+) : ListAdapter<DisplayImage, ImageAdapter.ImageViewHolder>(ImageDiffCallback()) {
 
     private val selectedPositions = mutableSetOf<Int>()
 
@@ -21,8 +22,13 @@ class ImageAdapter(
     }
 
     override fun onBindViewHolder(holder: ImageViewHolder, position: Int) {
-        val imageUrl = getItem(position)
-        Glide.with(holder.itemView.context).load(imageUrl).into(holder.imageView)
+        val displayImage = getItem(position)
+        // Disable caching to ensure the latest image is always displayed
+        Glide.with(holder.itemView.context)
+            .load(displayImage.path)
+            .diskCacheStrategy(DiskCacheStrategy.NONE)
+            .skipMemoryCache(true)
+            .into(holder.imageView)
 
         // Add visual feedback for selected items
         if (selectedPositions.contains(position)) {
@@ -49,22 +55,20 @@ class ImageAdapter(
     }
 
     fun getSelectedImagePaths(): List<String> {
-        return selectedPositions.map { getItem(it) }
+        return selectedPositions.map { getItem(it).path }
     }
 
-    private fun clearSelection() {
+    fun clearSelections() {
         val positionsToClear = selectedPositions.toList()
         selectedPositions.clear()
         positionsToClear.forEach { notifyItemChanged(it) }
     }
 
-    override fun submitList(list: List<String>?) {
-        clearSelection()
+    override fun submitList(list: List<DisplayImage>?) {
         super.submitList(list)
     }
 
-    override fun submitList(list: List<String>?, commitCallback: Runnable?) {
-        clearSelection()
+    override fun submitList(list: List<DisplayImage>?, commitCallback: Runnable?) {
         super.submitList(list, commitCallback)
     }
 
@@ -72,13 +76,13 @@ class ImageAdapter(
         val imageView: ImageView = itemView.findViewById(R.id.imageView)
     }
 
-    private class ImageDiffCallback : DiffUtil.ItemCallback<String>() {
-        override fun areItemsTheSame(oldItem: String, newItem: String): Boolean {
-            return oldItem == newItem
+    private class ImageDiffCallback : DiffUtil.ItemCallback<DisplayImage>() {
+        override fun areItemsTheSame(oldItem: DisplayImage, newItem: DisplayImage): Boolean {
+            return oldItem.id == newItem.id
         }
 
-        override fun areContentsTheSame(oldItem: String, newItem: String): Boolean {
-            return oldItem == newItem
+        override fun areContentsTheSame(oldItem: DisplayImage, newItem: DisplayImage): Boolean {
+            return oldItem.path == newItem.path
         }
     }
 }

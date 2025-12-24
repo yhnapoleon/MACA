@@ -27,6 +27,8 @@ class FetchActivity : AppCompatActivity() {
     private lateinit var binding: ActivityFetchBinding
     private lateinit var imageAdapter: ImageAdapter
     private var fetchJob: Job? = null
+    private var currentUserName: String? = null
+    private var currentUserType: String? = null
     @Volatile
     private var isPaused = false
 
@@ -34,6 +36,9 @@ class FetchActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityFetchBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        currentUserName = intent.getStringExtra("USER_NAME")
+        currentUserType = intent.getStringExtra("USER_TYPE")
         
         binding.urlEditText.setText("https://www.wallpaperflare.com/search?wallpaper=nature")
 
@@ -64,7 +69,8 @@ class FetchActivity : AppCompatActivity() {
         binding.playButton.setOnClickListener {
             val intent = Intent(this, GameActivity::class.java)
             intent.putStringArrayListExtra("IMAGE_PATHS", ArrayList(imageAdapter.getSelectedImagePaths()))
-            intent.putExtra("USER_TYPE", getIntent().getStringExtra("USER_TYPE"))
+            intent.putExtra("USER_NAME", currentUserName)
+            intent.putExtra("USER_TYPE", currentUserType)
             startActivity(intent)
         }
     }
@@ -73,18 +79,19 @@ class FetchActivity : AppCompatActivity() {
         // Initial UI setup on Main Thread
         withContext(Dispatchers.Main) {
             binding.playButton.isEnabled = false
+            imageAdapter.clearSelections()
+            imageAdapter.submitList(emptyList())
             binding.pauseButton.visibility = View.VISIBLE
             binding.progressBar.visibility = View.VISIBLE
             binding.progressText.visibility = View.VISIBLE
             binding.progressBar.progress = 0
             binding.progressText.text = "Starting..."
-            imageAdapter.submitList(emptyList())
         }
 
         try {
             // Move all heavy lifting to the IO dispatcher
             withContext(Dispatchers.IO) {
-                val downloadedImagePaths = mutableListOf<String>()
+                val downloadedImages = mutableListOf<DisplayImage>()
 
                 // HYBRID MODE LOGIC to determine URLs
                 val imageUrlsToDownload: List<String> = 
@@ -149,14 +156,14 @@ class FetchActivity : AppCompatActivity() {
 
                     val file = downloadImage(imageUrl, index)
                     if (file != null) {
-                        downloadedImagePaths.add(file.absolutePath)
+                        downloadedImages.add(DisplayImage(file.absolutePath))
                     }
                     
                     // Post progress and intermediate results to the Main thread
                     withContext(Dispatchers.Main) {
                         binding.progressBar.progress = ((index + 1) * 100) / totalToDownload
                         binding.progressText.text = "Downloading ${index + 1} of $totalToDownload..."
-                        imageAdapter.submitList(downloadedImagePaths.toList()) // Progressive update
+                        imageAdapter.submitList(downloadedImages.toList()) // Progressive update
                     }
                 }
             }

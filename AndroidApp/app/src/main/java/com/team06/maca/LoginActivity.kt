@@ -27,6 +27,8 @@ class LoginActivity : AppCompatActivity() {
                 repository.login(username, password)
                     .onSuccess {
                         val intent = Intent(this@LoginActivity, FetchActivity::class.java)
+                        // 需要把用户名一并传递到后续界面，避免排行榜出现空用户名的占位项
+                        intent.putExtra("USER_NAME", username)
                         intent.putExtra("USER_TYPE", it)
                         startActivity(intent)
                         finish()
